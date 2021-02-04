@@ -48,7 +48,7 @@ Docker 基础。
     + 下载`exe`，然后安装到自己喜欢的目录
   + `Linux`
     + `Bash`安装
-      + ❗ 生产环境不建议用这种方法，因为所有配置参数都是默认的，而且下载的是最新的版本
+      + ❗ **生产环境不建议用这种方法，因为所有配置参数都是默认的，而且下载的是最新的版本**
       + `curl -fsSL https://get.docker.com -o get-docker.sh`
       + `sudo sh get-docker.sh  --mirror Aliyun`
         + `--mirror Aliyun`，表示用阿里云镜像下载，加快速度
@@ -78,7 +78,7 @@ Docker 基础。
 
 + ###### 镜像（images）
 
-  + `Docker`镜像，就相当于是一个`root` 文件系统。比如官方镜像 ubuntu:16.04 就包含了完整的一套 Ubuntu16.04 最小系统的 `root` 文件系统。
+  + `Docker`镜像，就相当于是一个`root` 文件系统。比如官方镜像 `ubuntu:16.04` 就包含了完整的一套 `Ubuntu16.04` 最小系统的 `root` 文件系统。
   + `Docker `镜像是用于创建 `Docker `容器的模板，比如 `Ubuntu` 系统。
   + **只读**
 
@@ -92,7 +92,7 @@ Docker 基础。
 
   + 保存镜像的远程位置
 
-## 4. 使用
+## 4. 基本使用
 
 + ###### 从`DockerHub`中找镜像并下载（以`mysql`为例）
 
@@ -144,6 +144,12 @@ Docker 基础。
     + ![image-20210203224822045](assets/image-20210203224822045.png)
     + `CREATED`，镜像的创建时间，不是下载时间
 
+  + `docker images -q`，只显示镜像`id`
+
+    + ![image-20210204111344523](assets/image-20210204111344523.png)
+
+  + 
+
   + ###### 拉取镜像方法
 
     + ###### 根据版本拉取
@@ -161,5 +167,145 @@ Docker 基础。
       + 和网页搜索是一样的效果
       + ![image-20210203225640933](assets/image-20210203225640933.png)
 
-  + 7.7-00:19:56
+  + ##### 手动将本地镜像文件导入到docker仓库
+
+    + 在镜像所在目录，`docker load -i mysql.tar`
+      + `-i`，表示`image`
+
+  + ##### 删除本地镜像
+
+    + **注意**
+
+      + 如果镜像正在使用中，正常删除会报错
+      + 此时若还想删除，需要使用强制删除
+
+    + ###### 两种方式
+
+      + 根据镜像名[:版本号]，`docker image rm mysql`
+      + 根据镜像`ID`删除，`docker image rm ae2feff98a0c`
+      + `docker image rm`可简写为`docker rmi`
+
+    + ###### 强制删除
+
+      + 不仅会删掉镜像，还会删掉与之相关的容器
+      + `docker image rm -f mysql`
+      + 删除全部的镜像
+        + `docker rmi -f $(docker images -aq)`
+          + `docker images -aq`，列出所有镜像的`ID`
+          + `$()`表示先执行括号里的，并将括号里的结果作为值给外边的命令使用
+
++ ##### 容器相关命令
+
+  + ##### 运行容器
+
+    + `docker run 镜像名:tag | 镜像id`
+      + `docker run mysql:5.6.51`
+      + `docker run 8391e8f6fea5`
+
+  + ##### 查看当前运行的容器
+
+    + `docker ps`
+      + `-a`，所有容器，包括运行和非运行的容器
+      + `-q`，返回正在运行的容器`id`
+
+  + ##### 宿主机端口与容器中的端口进行映射
+
+    + `-p`
+    + `docker run -p host_port:docker_port mysql:5.6.51`
+
+  + ##### 后台运行容器
+
+    + `-d`
+
+  + ##### 指定容器名字
+
+    + `--name`
+    + 名字唯一
+
+  + ##### 停止|重启 容器
+
+    + `stop`，正常停止
+    + `kill`，立即停止
+    + `restart`，重启
+
+  + ##### 删除容器
+
+    + ###### 删除已经停止运行的容器
+
+      + `docker rm container_name|container_id`
+
+    + ###### 删除正在运行的容器
+
+      + `-f`
+
+    + ###### 删除所有容器
+
+      + `docker rm -f $(docker ps -aq)`
+
+  + ##### 查看容器内==运行==的服务日志
+
+    + `docker logs container_id|container_name`
+      + `-f`，实时展示日志
+      + `-t`，显示时间戳
+      + `--tail n`，查看最后`n`行
+
+  + ##### 查看容器内的进程
+
+    + `docker top container_id|container_name`
+
+  + ##### 与容器内部进行交互
+
+    + `docker exec -it container_name|container_id CMMD`
+      + `bash`，进入容器并与容器内的命令终端交互
+      + ![image-20210204153336468](assets/image-20210204153336468.png)
+
+    + `exit`，退出交互
+
+  + ##### 传输文件
+
+    + ###### 复制文件
+
+      + ###### 容器到宿主机
+
+        + `docker cp container_id|container_name:inner_file_path host_dir_path`
+
+      + ###### 宿主机到容器
+
+        + `docker cp host_file_path container_id|container_name:inner_dir_path`
+
+  + 查看`docker`内部细节
+    + `docker inspect`
+
+## 6.数据卷（Volume）
+
++ **作用**：
+  + 实现宿主机系统与容器之前的==文件共享==
+
++ ##### 在启动容器时候指定数据卷，两种方式
+
+  + 目录路径必须是==绝对路径==
+
+  + ###### 自定义数据卷目录
+
+    + `-v` 宿主机目录`:`容器内的目录
+    + 这种方式会清空容器内目录的文件
+    + `docker run -d -p 8081:8080 --name mytest -v /data/share:/data/share/ tomcat:8.0-jre8`
+
+  + ###### 自动数据卷目录
+
+    + `docker run -d -p 8081:8080 --name mytest -v the_name_you_like:/data/share/ tomcat:8.0-jre8`
+      + `the_name_you_like`，此时，容器启动后，会自动在宿主机上创建`the_name_you_like`目录
+      + 适合那些需要把数据写在容器外边的服务，如，数据库等
+
+## 7.将容器打包成新的镜像
+
++ `docker commit -m"描述信息"-a"作者信息" 容器id|容器名称 打包成的镜像名称:标签名`
+  + `docker commit -m"测试库MySQL" -a"maixiaochai" mysql mysql-test:1.0`
+
+
+
+## 8.镜像备份
+
++ `docker save 镜像名称:Tag -o 文件名`
+  + `docker save mysql-test:1.0 -o mysql-test-1.0.tar`
 
