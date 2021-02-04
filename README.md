@@ -274,13 +274,15 @@ Docker 基础。
         + `docker cp host_file_path container_id|container_name:inner_dir_path`
 
   + 查看`docker`内部细节
+    
     + `docker inspect`
 
 ## 6.数据卷（Volume）
 
 + **作用**：
-  + 实现宿主机系统与容器之前的==文件共享==
-
+  
++ 实现宿主机系统与容器之前的==文件共享==
+  
 + ##### 在启动容器时候指定数据卷，两种方式
 
   + 目录路径必须是==绝对路径==
@@ -309,3 +311,12 @@ Docker 基础。
 + `docker save 镜像名称:Tag -o 文件名`
   + `docker save mysql-test:1.0 -o mysql-test-1.0.tar`
 
+## 9.镜像的原理
+
++ `docker`的镜像实际是由一层一层的文件系统组成
+  + `bootfs`
+  + `rootfs`
++ `UnionFS`，联合文件系统
+  + 最大的好处是资源共享
+
++ 12.12
