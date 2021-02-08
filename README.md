@@ -281,7 +281,7 @@ Docker 基础。
 
 + **作用**：
   
-+ 实现宿主机系统与容器之前的==文件共享==
+  + 实现宿主机系统与容器之前的==文件共享==
   
 + ##### 在启动容器时候指定数据卷，两种方式
 
@@ -298,6 +298,42 @@ Docker 基础。
     + `docker run -d -p 8081:8080 --name mytest -v the_name_you_like:/data/share/ tomcat:8.0-jre8`
       + `the_name_you_like`，此时，容器启动后，会自动在宿主机上创建`the_name_you_like`目录
       + 适合那些需要把数据写在容器外边的服务，如，数据库等
+  
++ ##### 数据卷特点
+
+  + 数据卷可以在容器之间共享和重用
+  + 对数据卷的修改，会立刻影响到对应的容器
+  + 对数据卷的修改不会影响镜像
+  + 数据卷默认会一直存在，即使容器被删除
+
++ ##### 读写控制
+
+  + 宿主机可以影响容器，容器不能影响宿主机,`ro`
+    + `docker run -d -p8990:8080 --name mysql_container -v /root/apps:/usr/local/mysql:ro mysql:5.6.51`
+
++ ##### 数据卷相关命令
+
+  + ###### 查看数据卷
+
+    + `docker volume ls`
+
+  + ###### 查看数据卷细节
+
+    + `docker volume inspect`
+
+  + ###### 创建数据卷
+
+    + `docker volume create volume_name`
+
+  + ###### 删除数据卷
+
+    + ###### 删除没有使用的数据卷
+
+      + `docker volume prune`
+
+    + ###### 删除指定的数据卷
+
+      + `docker volume rm volume_name`
 
 ## 7.将容器打包成新的镜像
 
@@ -319,4 +355,44 @@ Docker 基础。
 + `UnionFS`，联合文件系统
   + 最大的好处是资源共享
 
-+ 12.12
+
+## 10.网络配置
+
++ `docker`允许通过外部访问容器或容器互联的方式来提供网络服务
+
++ `docker`容器与操作系统通信机制
+
+  + `docker`启动时会自动在主机上创建一个虚拟网桥(`bridge`)
+  + 创建一个新容器的时候会创建一对`veth port`接口，一端在容器内，另一端在本地被挂载到网桥
+    + 当数据包发送到一个接口时，另外一个接口也可以收到相同的数据包
+
++ ##### `docker`网络使用
+
+  + 一般在使用`docker`网桥时不使用默认的公共网桥，容易影响其它容器的网络使用，而是站在同一个应用的角度设置网桥
+
+  + ###### 一些命令
+
+    + ###### 查看`docker`网桥配置
+
+      + `docker network ls`
+
+    + ###### 创建网桥
+
+      + `docker network create mysql_bridge`
+        + 等价于 `docker network create --driver bridge mysql_bridge`
+          + `--driver`, 网络类型
+
+    + ###### 使用网桥
+
+      + `docker run -d -p 8081:8080 --name mysql01 --network mysql_bridge mysql:5.6.51`
+        + 注意，此时，容器的名字`mysql01`和容器的`ip`**自动**进行了映射，在同一网桥下访问容器的名字即可访问到容器
+
+    + ###### 删除网桥
+
+      + `docker network rm the_bridge_name`
+
+    + ###### 查看具体网桥信息
+
+      + `docker inspect the_bridge_name`
+
+## 14.14
