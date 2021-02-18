@@ -395,4 +395,34 @@ Docker 基础。
 
       + `docker inspect the_bridge_name`
 
-## 14.14
+## 11. `Docker`启动特定容器服务
+
++ ##### 操作步骤，以`MySQL`为例
+
+  + 在`DockerHub`上搜索，然后`pull`
+  + 查看描述信息，了解使用方法
+  + `docker run --name mysql -e MYSQL_ROOT_PASSWORD=maixiaochai -d -p 3306:3306  -v mysqldata:/var/lib/mysql -v mysqlconfig:/etc/mysql mysql:tag`
+    + --name，容器名称
+    + -e，后边接要给容器配置的环境变量
+      + MYSQL_ROOT_PASSWORD=my-secret-pw，设置MySQL的root密码为maixiaochai
+    + -d，表示可后台运行
+    + -p，端口映射（宿主机端口号：容器端口号）
+    + -v，映射数据卷，将数据文件保存在宿主机
+      + /var/lib/mysql，MYSQL镜像中默认数据保存目录
+      + -v mysqlconfig:/etc/mysql，将MySQL配置文件保存的目录映射出去，使得MYSQL**重启**的时候能加载自定义配置
+
++ ##### 安装redis
+
+  + `docker run -d -p 6379:6379 --name redis -v redisdata:/data -v myredis/conf/:/usr/local/etc/redis/ redis:5.0.10 redis-server --appendonly yes /usr/local/etc/redis/redis.conf`
+    + `redis-server --appendonly yes`，开启持久化
+    + `-v redisdata:/data`，将持久化目录映射到宿主机
+    + `/usr/local/etc/redis/redis.conf`，使用`redis.conf`这里边的配置
+      + 配置文件从redis源码中找一个改一改，然后放到被映射的宿主机配置目录
+
+## 12.Dockerfile
+
++ ##### 简述
+
+  + Dockerfile，是一个用来构建镜像的文本文件，文本内容包含了一条条构建镜像所需的指令和说明
+  + 用于构建自己的应用的镜像
+  + 19.19 00:12:08
