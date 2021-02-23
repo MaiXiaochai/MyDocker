@@ -419,7 +419,7 @@ Docker 基础。
     + `/usr/local/etc/redis/redis.conf`，使用`redis.conf`这里边的配置
       + 配置文件从redis源码中找一个改一改，然后放到被映射的宿主机配置目录
 
-## 12.Dockerfile
+## 12.`Dockerfile`
 
 + ##### 简述
 
@@ -441,13 +441,142 @@ Docker 基础。
     + `RUN`，构建镜像时需要运行的命令
     + `EXPOSE`，当前容器对外暴露出的端口
     + `WORKDIR`，指定在创建容器后，终端默认登录进来的工作目录，一个落脚点
+      + 如果`WORKDIR`不存在，即使它在没有任何后续`Dockerfile`指令中使用，他也将被创建
+      + `WORKDIR`可以在`Docker`中多次使用，如果提供了相对路径，则该路径将与先前`WORKDIR`指令的路径相对
     + `ENV`，用来在构建过程中设置环境变量
       + 以后可以复用
       + 在运行容器的时候可以设置环境变量
-    + `ADD`，将宿主机目录下的文件拷贝进镜像且`ADD`命令会自动处理URL和解压tar包
+    + `ADD`，将宿主机目录下的文件拷贝进镜像且`ADD`命令会自动处理URL和解压tar包（**下载的压缩包不能解压**）
     + `COPY`，类似于`ADD`，拷贝文件和目录到镜像中，将从构建上下文目录中<原路径>的文件或目录复制到新的一层的镜像内的<目标路径>位置
     + `VOLUME`，容器数据卷，用于数据保存和持久化工作，`-v`的容器端
-    + `CMD`，指定一个容器启动时要运行的命令，`Dockerfile`中可以有多个`CMD`命令，但只有最后一个生效，`CMD`会被`docker run` 之后的参数替换
-    + `ENTRYPOINT`，指定一个容器启动时要运行的命令，`ENTRYPOINT`的目的和`CMD`一样，都是在指定容器启动程序及其参数
+  + `CMD`，指定一个容器启动时要运行的命令，`Dockerfile`中可以有多个`CMD`命令，但只有**最后一个生效**，`CMD`会被`docker run` 之后的参数替换
+    
+  + `ENTRYPOINT`，指定一个容器启动时要运行的命令，`ENTRYPOINT`的目的和`CMD`一样，都是在指定容器启动程序及其参数
+    
+  + ###### 使用案例
+  
+    + `mkdir mydocker && cd mydocker`
+  
+    + `vim Dockerfile`
+  
+      + ```shell
+        FROM centos:7
+        RUN yum install -y vim
+        EXPOSE 8080
+        EXPOSE 15672
+        WORKDIR /data
+        ENV CORE_DATA_DIR /data/coredata
+        COPY a.txt /data/files
+        ADD https://mirrors.bfsu.edu.cn/apache/tomcat/tomcat-10/v10.0.2/bin/apache-tomcat-10.0.2.tar.gz /data/packages
+        ADD pandas‑1.2.2‑cp39‑cp39‑win_amd64.whl /data/pylibs
+        ADD apache-tomcat-10.0.2.tar.gz /data/softwares
+        RUN cd /data/softwares && mv apache-tomcat-10.0.2 tomcat
+        VOLUMN $CORE_DATA_DIR
+        ENTRYPOINT ["ls"]
+        CMD ["/data/coredata"]
+        ```
+  
+    + `docker build -t mycentos7:01 .`
+  
+      + -t，指定仓库名称和版本（镜像名称和版本）
+      + `.`，当前目录，`Dockerfile`所在目录
+  
+    + `COPY a.txt /data/files`，拷贝当前目录下的a.txt到 镜像的/data/files目录下
+  
+    + ```shell
+      ADD apache-tomcat-10.0.2.tar.gz /data/softwares
+      RUN cd /data/softwares && mv apache-tomcat-10.0.2 tomcat
+      ```
+  
+      + 在解压之后，重命名
+  
+    + ```shell
+      ENTRYPOINT ["ls"]
+      CMD ["/data/coredata"]
+      ```
+  
+      + 在`docker run mycentos7:2`时，会默认打印`/data/coredata`下的对象
+      + 同时，CMD后面的内容可由run后边的参数覆盖，如
+        + `docker run mycentos7:2 /data/packages`，`/data/packages`会覆盖CMD后边的内容，执行的时候会打印`/data/packages`下的对象
 
-  + 20.20 00:01:18
+## 13.`Docker Compose`
+
++ ##### 简述
+
+  + `Compose` 项目是`Docker`官方的开源项目，负责实现对`Docker`集群的快速编排
+    
+    + 通过一个单独的`docker-compose.yml`
+    
+  + 定位，定义和运行多个`docker`容器的应用，同时可以对多个容器进行编排
+
+    
+
++ ##### `Compose`两个重要概念
+
+  + 服务（`service`）：一个容器，实际上可以包括若干运行相同镜像的容器实例
+
+  + 项目（`project`）：由一组关联的应用容器组成的一个完整业务单元，在`docker-compose.yml`文件中定义
+
+    
+
++ ##### `Docker-compose`安装(`LINUX`)
+
+  + ```shell
+    sudo curl -L "https://github.com/docker/compose/releases/download/1.28.4/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+    ```
+
+  + ```shell
+    sudo chmod +x /usr/local/bin/docker-compose
+    ```
+
+  + ```shell
+    sudo ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
+    ```
+
+  + ###### 检测是否安装成功
+
+    + `docker-compose -v`
+
+      + 成功后显示：`docker-compose version 1.28.4, build cabd5cfb`
+
+        
+
++ ##### `Docker_compose`使用
+
+  + 创建`docker-compose.yml`文件
+
+  + 配置文件
+
+    + ```shell
+      version:"3.0" # 指定项目版本
+      
+      services:
+      	tomcat:	# 服务名唯一
+      		image: tomcat:9.0-jre9 # 创建当前这个服务使用的镜像
+      		ports:
+      			- 8080:8080 # 宿主机端口:容器端口，最好用引号包起来，<60的端口，在yml中会解析成60进制
+              volumes:
+              	# - /root/apps:/usr/local/tomcat/apps
+              	- tomcatdata:/usr/local/tomcat/apps
+       
+       volumes: # 声明上面服务所使用的的自动创建的卷名
+       	tomcatdata:
+      			
+           tomcat01:
+           	image: tomcat:9.0-jre9 # 创建当前这个服务使用的镜像
+           	ports:
+      			- 8081:8080 # 宿主机端口:容器端口，最好用引号包起来，<60的端口，在yml中会解析成60进制
+      ```
+
+  + ###### 启动项目
+
+    + `docker-compose up`（默认前台启动）
+
+      + 必须保证运行命令所在的目录中存在`docker-compose.yml`文件
+
+        
+
++ ##### `docker-compose`配置文件命令
+
+  + `volumes`，数据卷
+  + 
