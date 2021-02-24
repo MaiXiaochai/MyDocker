@@ -548,25 +548,117 @@ Docker 基础。
   + 配置文件
 
     + ```shell
-      version:"3.0" # 指定项目版本
+      version:"3.8" # 指定项目版本（目前最高版本3.8）
       
       services:
-      	tomcat:	# 服务名唯一
+      	web_build_test:
+      		build:
+      			context: demo # 指定上下文目录(要打包的Dockerfile所在的目录, 相对目录和绝对目录都行)
+      			dockfile: Dockerfile
+      		container_name: c_demo
+      		
+      		ports:
+      			- "8083:8083"
+      
+              networks:
+              	- hello
+      
+              depends_on:
+              	- tomcat01
+      		
+      	tomcat01:	# 服务名唯一
+      		container_name: tomcat01
       		image: tomcat:9.0-jre9 # 创建当前这个服务使用的镜像
       		ports:
       			- 8080:8080 # 宿主机端口:容器端口，最好用引号包起来，<60的端口，在yml中会解析成60进制
               volumes:
               	# - /root/apps:/usr/local/tomcat/apps
-              	- tomcatdata:/usr/local/tomcat/apps
-       
-       volumes: # 声明上面服务所使用的的自动创建的卷名
-       	tomcatdata:
-      			
-           tomcat01:
+              	- tomcatdata01:/usr/local/tomcat/apps
+              
+               networks: # 代表当前服务使用哪个网络
+               	- hello
+          	
+          	depends_on:
+          		- redis
+          		- mysql
+          
+       	tomcat02:
+       		container_name: tomcat02
            	image: tomcat:9.0-jre9 # 创建当前这个服务使用的镜像
            	ports:
       			- 8081:8080 # 宿主机端口:容器端口，最好用引号包起来，<60的端口，在yml中会解析成60进制
+              volumes:
+              	# - /root/apps:/usr/local/tomcat/apps
+              	- tomcatdata02:/usr/local/tomcat/apps
+              	
+      		networks: # 代表当前服务使用哪个网络
+      			- hello
+      		
+           mysql:
+           	image: mysql:8.0.23
+           	container_name: mysql
+           	
+           	port:
+           		- "3306:3306"
+           		
+           	volumes:
+           		- mysqldata:/var/lib/mysql
+           		- mysqlconfig:/etc/mysql
+           		
+              # environment:
+              	# - MYSQL_ROOT_PASSWORD=root
+            
+             	env_file:
+             		- mysql.env
+              
+              networks:
+              	- hello
+              
+              healthcheck:
+              	test: ["CMD", "curl", "-f", "http://localhost"]
+              	interval: 1m30s
+              	timeout: 10s
+              	retries: 3
+           
+           redis:
+           	image: redis:6.2.0
+           	container_name: redis
+           	
+           	ports:
+           		- "6379:6379"
+           		
+              volume:
+              	- redisdata:/data
+              	
+             	networks:
+             		- hello
+             		
+              command: "redis-server --appendonly yes" # run镜像之后，覆盖容器内部命令
+           
+       volumes: # 声明上面服务所使用的的自动创建的卷名
+       	tomcatdata01: # 声明指定的卷名
+       				  # compose自动创建该卷名但是会在之前加入项目名称，如 hello_tomcatdata
+          	external: # 使用自定义卷名
+          		false # 确定是否使用自定义卷名，如果为true，则需要在服务启动前先手动创建该卷
+         	
+         	mysqldata:
+         	mysqlconf:
+       	redisdata:
+       	
+       networks:
+       	hello: # 定义上面服务用到的网桥名称，默认创建就是 bridge
+       		external:
+       			true	# 使用外部指定的网桥，网桥必须在服务启动前手动创建
+       
       ```
+      
+    + `mysql.env`
+
+      ```shell
+      MYSQL_ROOT_PASSWORD=root
+      ```
+
+      
 
   + ###### 启动项目
 
@@ -576,7 +668,56 @@ Docker 基础。
 
         
 
-+ ##### `docker-compose`配置文件命令
++ ##### `docker-compose`模板指令
 
-  + `volumes`，数据卷
+  + `version`，`compose`版本，
+
+    + 最高支持的版本可以在这里查到https://docs.docker.com/compose/compose-file/compose-file-v3/
+
+  + `volumes`，数据卷，等价于 `run -v`
+
+  + `networks`，网络，等价于 `run --network`
+
+  + `container_name`，给容器指定名字，等价于 `run --name`
+
+  + `command`，`docker run` 启动容器时，运行的一些命令，用来覆盖程序默认启动指令
+
+  + `environment`，用于指定容器启动时的环境参数
+
+  + `env_file`，环境变量保存的文件路径，用于从文件中获取环境变量
+
+    + 要求文件必须以`.env`结尾
+
+      
+
+  + `depends_on`，解决容器的依赖、启动顺序问题
+
+    + 表示这个服务启动需要依赖于哪些其它服务
+    + 后边写**服务**`ID`而不是**容器名称**
+    + 该服务不会等到所依赖的服务完全启动后才启动，而是等到所依赖的服务启动到一定程度就启动
+
+  + `healthcheck`，用于告诉`Docker`引擎应该如何进行判断容器的状态是否正常
+
+  + `sysctls`，修改容器中系统内部参数
+
+    + 非必须，有些服务启动受到容器内操作系统参数限制可能会无法启动，必须通过修改容器中参数才能启动
+
+  + `ulimits`，用来修改容器内部系统的最大进程数，使用时可根据当前容器运行服务要求进行修改
+
+    
+
+  + `build`，用来将指定的`Dockerfile`打包成镜像，然后再运行该镜像
+
+    
+
++ ##### `compose` 模板指令和`compose` 指令区别
+
+  + **模板指令**，用于书写在`docker-compose.yml`文件中的指令
+  + **指令**，用于对整个`docker-compose.yml`对应的这个项目操作，写在`docker-compose`命令之后的命令
   + 
+
+## 相关链接
+
++ [DockerHub](https://registry.hub.docker.com/)
++ [《Docker—从入门到实践》](https://vuepress.mirror.docker-practice.com/s)
++ **from**[《【编程不良人】2021年最新Docker容器技术&Docker-Compose实战教程》](https://www.bilibili.com/video/BV1ZT4y1K75K)
