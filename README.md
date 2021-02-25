@@ -672,7 +672,7 @@ Docker 基础。
 
   + `version`，`compose`版本，
 
-    + 最高支持的版本可以在这里查到https://docs.docker.com/compose/compose-file/compose-file-v3/
+    + 最高支持的版本可以在这里查到：[传送门](https://docs.docker.com/compose/compose-file/compose-file-v3/)
 
   + `volumes`，数据卷，等价于 `run -v`
 
@@ -710,11 +710,108 @@ Docker 基础。
 
     
 
-+ ##### `compose` 模板指令和`compose` 指令区别
++ ##### `compose` 模板指令和`compose` 指令区别(**本文件中所提及的“指令”和“命令”指的均为同一个东西** )
 
   + **模板指令**，用于书写在`docker-compose.yml`文件中的指令
+  
   + **指令**，用于对整个`docker-compose.yml`对应的这个项目操作，写在`docker-compose`命令之后的命令
-  + 
+  
+    
+  
++ ##### `compose `命令选项
+
+  + `-f， --file`，指定使用的`compose`模板文件，默认为`docker-compose.yml`，可以多次指定
+
+  +  `-p,--project-name`，指定项目名称，默认将使用所在目录名称作为项目名称
+
+  + `--x-networking`，使用`Docker`的可插拔网络后端特性
+
+  + `--verbose`，输出更多调试信息
+
+  + `-v,--version`，打印版本并退出
+
+    
+
++ `Docker-compose`命令
+
+  + `up`
+
+    + 它将尝试自动完成包括构建镜像，（重新）创建服务，并关联服务相关容器的一系列操作
+    + 关联的服务都将会自动启动，除非已处于运行状态
+    + `docker-compose up`启动的容器在前台运行，控制台将打印所有容器的输出信息
+    + `Ctrl+C`停止命令时，所有容器将会停止
+    + 如果使用`docker-compose up -d`，将会在后台启动并运行所有的容器
+    + 默认下，如果容器已经存在，将会尝试停止容器，然后重新创建（保持使用`volume-from`挂载的卷），以保证新服务以`docker-compose.yml`文件的最新内容启动
+
+  + `down`
+
+    + 关闭所有`docker-compose.yml`中的服务，并移除网络（会移除自动创建的网络，不会移除外部网络）
+    + 不会移除数据卷
+
+  + `exec`
+
+    + 进入指定的容器
+
+    + 类似`docker exec`但有些不同
+
+      + 例如，`docker`进入`23fdd00a692b`容器内并使用`shell`，`docker exec -it 23fdd00a692b bash`
+
+      + `docker-compose`要用服务`ID`（也就是服务名）进入，`docker-compose exec redis bash`
+
+        
+
+  + `ps`
+
+    + 展示当前`docker-compose`运行的所有容器
+
+  + `restart`
+
+    + 重启项目中的服务
+
+  + `rm`
+
+    + 删除所有（停止状态的）服务容器。推荐先执行`docker-compose stop`命令来停止容器
+    + `-f`，前置直接删除，包括非停止状态的容器服务
+    + `-v`，删除容器所挂载的数据卷，**谨慎使用**
+
+  + `start`
+    + 启动已经存在的容器服务
+  + `stop`
+    + 停止已处于运行状态的容器但不删除它
+    + `-t`，停止容器时的超时时间
+  + `top`
+    + 查看各个服务容器内运行的进程
+  + `unpause`
+    + 恢复处于暂停状态的服务
+  + `logs`
+    + 查看服务日志，默认查看所有服务日志
+    + `docker-compose logs redis`
+
+## 14.`Portainer`-`Docker`可视化工具
+
++ ##### 安装
+
+  + `docker pull portainer/portainer`
+
++ ##### 启动
+
+  + ```shell
+    docker run -d -p 8000:8000 -p 9000:9000 --name=portainerWeb --restart=always -v /var/run/docker.sock:/var/run/docker.sock -v portainer_data:/data portainer/portainer
+    ```
+
+  + `--restart=always`，只要容器关闭则立即重启
+
++ ##### 访问
+
+  + `http://你的机器的ip:9000`
+    + 如果是远程主机，需要开放`9000`端口
+  + 然后设置管理员用户和密码
+  + 选择`Local`选项进行连接即可
+
++ ##### 一些说明
+
+  + ![image-20210225164537961](assets/image-20210225164537961.png)
+    + `stack`，栈，一个`stack`就带表一个`docker-compose`在运行
 
 ## 相关链接
 
