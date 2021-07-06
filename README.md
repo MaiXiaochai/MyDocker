@@ -816,5 +816,5 @@ Docker 基础。
 ## 相关链接
 
 + [DockerHub](https://registry.hub.docker.com/)
-+ [《Docker—从入门到实践》](https://vuepress.mirror.docker-practice.com/s)
++ [《Docker—从入门到实践》](https://vuepress.mirror.docker-practice.com)
 + **from**[《【编程不良人】2021年最新Docker容器技术&Docker-Compose实战教程》](https://www.bilibili.com/video/BV1ZT4y1K75K)
