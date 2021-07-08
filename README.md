@@ -242,7 +242,7 @@ Docker 基础。
 
       + `docker rm -f $(docker ps -aq)`
 
-  + ##### 查看容器内==运行==的服务日志
+  + ##### 查看容器内运行的服务日志
 
     + `docker logs container_id|container_name`
       + `-f`，实时展示日志
