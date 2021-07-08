@@ -404,7 +404,7 @@ Docker 基础。
   + `docker run --name mysql -e MYSQL_ROOT_PASSWORD=maixiaochai -d -p 3306:3306  -v mysqldata:/var/lib/mysql -v mysqlconfig:/etc/mysql mysql:tag`
     + --name，容器名称
     + -e，后边接要给容器配置的环境变量
-      + MYSQL_ROOT_PASSWORD=my-secret-pw，设置MySQL的root密码为maixiaochai
+      + `MYSQL_ROOT_PASSWORD=maixiaochai`，设置MySQL的root密码为maixiaochai
     + -d，表示可后台运行
     + -p，端口映射（宿主机端口号：容器端口号）
     + -v，映射数据卷，将数据文件保存在宿主机
