@@ -796,7 +796,13 @@ Docker 基础。
 + ##### 启动
 
   + ```shell
-    docker run -d -p 8000:8000 -p 9000:9000 --name=portainerWeb --restart=always -v /var/run/docker.sock:/var/run/docker.sock -v portainer_data:/data portainer/portainer
+    docker run -d \
+    -p 8000:8000 \
+    -p 9000:9000 \
+    --name=portainerWeb \
+    --restart=always \
+    -v /var/run/docker.sock:/var/run/docker.sock \
+    -v portainer_data:/data portainer/portainer
     ```
 
   + `--restart=always`，只要容器关闭则立即重启
