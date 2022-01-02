@@ -545,7 +545,7 @@ Docker 基础。
 
   + 创建`docker-compose.yml`文件
 
-  + 配置文件
+  + 配置文件（这里边的格式，尤其是缩进，由于种种原因可能掺杂`tab`和空格，所以，这里主要关键功能就好）
 
     + ```shell
       version:"3.8" # 指定项目版本（目前最高版本3.8）
@@ -620,20 +620,20 @@ Docker 基础。
               	timeout: 10s
               	retries: 3
            
-           redis:
-           	image: redis:6.2.0
-           	container_name: redis
-           	
-           	ports:
-           		- "6379:6379"
-           		
-              volume:
-              	- redisdata:/data
-              	
-             	networks:
-             		- hello
-             		
-              command: "redis-server --appendonly yes" # run镜像之后，覆盖容器内部命令
+             redis:
+              image: redis:6.2.0
+              container_name: redis
+      
+              ports:
+                - "6379:6379"
+      
+                volume:
+                  - redisdata:/data
+      
+                networks:
+                  - hello
+      
+                command: "redis-server --appendonly yes" # run镜像之后，覆盖容器内部命令
            
        volumes: # 声明上面服务所使用的的自动创建的卷名
        	tomcatdata01: # 声明指定的卷名
